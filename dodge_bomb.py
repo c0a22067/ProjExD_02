@@ -20,10 +20,14 @@ def main():
     vx = 5
     vy = 5
     tmr = 0
+    total_move = [0,0]
+    key_lst = {"up":(0, -5),"down":(0,5),"left":(-5,0),"right":(5,0)}
+    
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT: 
                 return
+        pg.K_UP 
 
         screen.blit(bg_img, [0, 0])
         screen.blit(kk_img, [900, 400])
