@@ -30,14 +30,22 @@ def main():
     kk_rct = kk_img.get_rect()
     kk_rct.center = 900,400
     
+    clock = pg.time.Clock()
+
     enn = pg.Surface((20, 20))
+
     pg.draw.circle(enn, (255, 0, 0), (10, 10), 10)
+
     enn.set_colorkey((0, 0, 0))
+
     x, y = random.randint(0,1600), random.randint(0,900)
     vx,vy = +5, +5
     enn_rct = enn.get_rect()
+
     enn_rct.center = x, y
+
     clock = pg.time.Clock()
+    font = pg.font.Font(None, 80)
     tmr = 0
     
     accs = [a for a in range(1, 11)] # 加速度のリスト
@@ -46,6 +54,8 @@ def main():
         enn_img = pg.Surface((20*r, 20*r), pg.SRCALPHA)
         pg.draw.circle(enn_img, (255, 0, 0), (10*r, 10*r), 10*r)
         enn_imgs.append(enn_img)
+
+
         
     key_zi = {
         pg.K_UP: (0, -5),
@@ -69,8 +79,9 @@ def main():
             if event.type == pg.QUIT:
                 return
 
+        txt = font.render(str(tmr), True, (0, 0, 255))
         screen.blit(bg_img, [0, 0])
-        
+
         # こうかとんを動かす
         key_lst = pg.key.get_pressed()
         total = [0, 0]
@@ -101,12 +112,13 @@ def main():
         if not enn_in[1]:
             vy = -vy
         
+
         # 爆弾がこうかとんに近づく
         kyori = (kk_rct.centerx-enn_rct.centerx, kk_rct.centery-enn_rct.centery) # 爆弾から見たベクトル
         norm = math.sqrt(kyori[0]**2 + kyori[1]**2) 
         if norm < 500:
         # 距離が500未満の場合、現在の方向に一定の慣性を。
-            avx, avy = vx, vy  # 慣性を調整するための係数を調整。
+            avx, avy = vx, vy  # 慣性を調整するための係数を調整
         else:
         # 距離が500以上の場合、追跡する
             vctr = (kyori[0] / norm * math.sqrt(50), kyori[1] / norm * math.sqrt(50)) # ベクトルを√50になるように正規化
@@ -122,9 +134,10 @@ def main():
             return
         
         enn_rct.move_ip(avx, avy)
+        screen.blit(txt, [300, 200])
         pg.display.update()
         tmr += 1
-        clock.tick(50)
+        clock.tick(60)
 
 
 if __name__ == "__main__":
