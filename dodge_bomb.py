@@ -20,6 +20,8 @@ def gamengai(rect):
     yy = rect.top >= 0 and rect.bottom <= HEIGHT
     return xx, yy
 
+def timer(): #タイマーの座標
+    return (300, 200)
 
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
@@ -132,7 +134,7 @@ def main():
             return
         
         enn_rct.move_ip(avx, avy)
-        screen.blit(txt, [300, 200])
+        screen.blit(txt, timer())
         pg.display.update()
         tmr += 1
         clock.tick(60)
