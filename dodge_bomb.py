@@ -31,6 +31,7 @@ def main():
     kk_rct.center = 900,400
     
     clock = pg.time.Clock()
+    font = pg.font.Font(None, 80)
 
     enn = pg.Surface((20, 20))
 
@@ -43,9 +44,6 @@ def main():
     enn_rct = enn.get_rect()
 
     enn_rct.center = x, y
-
-    clock = pg.time.Clock()
-    font = pg.font.Font(None, 80)
     tmr = 0
     
     accs = [a for a in range(1, 11)] # 加速度のリスト
