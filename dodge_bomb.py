@@ -100,10 +100,25 @@ def main():
             vx = -vx
         if not enn_in[1]:
             vy = -vy
-
+        
+        # 爆弾がこうかとんに近づく
+        kyori = (kk_rct.centerx-enn_rct.centerx, kk_rct.centery-enn_rct.centery) # 爆弾から見たベクトル
+        norm = math.sqrt(kyori[0]**2 + kyori[1]**2) 
+        if norm < 500:
+        # 距離が500未満の場合、現在の方向に一定の慣性を。
+            avx, avy = vx, vy  # 慣性を調整するための係数を調整。
+        else:
+        # 距離が500以上の場合、追跡する
+            vctr = (kyori[0] / norm * math.sqrt(50), kyori[1] / norm * math.sqrt(50)) # ベクトルを√50になるように正規化
+            avx, avy = vctr[0] * accs[min(tmr // 500, 9)], vctr[1] * accs[min(tmr // 500, 9)]
+            vx, vy = vctr[0], vctr[1]
+            
+        enn_img = enn_imgs[min(tmr//500, 9)] # 時間とともに爆弾を拡大
+        screen.blit(enn_img, [enn_rct.x, enn_rct.y])
 
         # こうかとんと爆弾がぶつかったら終了  
         if kk_rct.colliderect(enn_rct):
+            print("ゲームオーバー")
             return
         
         enn_rct.move_ip(avx, avy)
