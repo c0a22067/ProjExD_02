@@ -1,73 +1,117 @@
-import random
 import sys
 import pygame as pg
+import random
+import math
+
+
 WIDTH, HEIGHT = 1600, 900
-delta = {  # 練習３：移動量辞書
-    pg.K_UP: (0, -5),
-    pg.K_DOWN: (0, +5),
-    pg.K_LEFT: (-5, 0),
-    pg.K_RIGHT: (+5, 0),
-}
-def check_bound(obj_rct: pg.Rect):
+
+
+def gamengai(rect):
+    """こうかとんと爆弾が画面外に出たことを検知する関数
+
+    Args:
+        rect (img): キャラクターを囲む四角
+
+    Returns:
+        int:x座標y座標の範囲で画面外にでてしまう座標
     """
-    引数：こうかとんRectかばくだんRect
-    戻り値：タプル（横方向判定結果，縦方向判定結果）
-    画面内ならTrue，画面外ならFalse
-    """
-    yoko, tate = True, True
-    if obj_rct.left < 0 or WIDTH < obj_rct.right: # 横方向判定
-        yoko = False
-    if obj_rct.top < 0 or HEIGHT < obj_rct.bottom: # 縦方向判定
-        tate = False
-    return yoko, tate
+    xx = rect.left >= 0 and rect.right <= WIDTH
+    yy = rect.top >= 0 and rect.bottom <= HEIGHT
+    return xx, yy
+
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("ex02/fig/pg_bg.jpg")
-    """こうかとん"""
     kk_img = pg.image.load("ex02/fig/3.png")
     kk_img = pg.transform.rotozoom(kk_img, 0, 2.0)
     kk_rct = kk_img.get_rect()
-    kk_rct.center = (900, 400)  # 練習３：こうかとんの初期座標を設定する
-    """ばくだん"""
-    bd_img = pg.Surface((20, 20))  # 練習１：爆弾Surfaceを作成する
-    bd_img.set_colorkey((0, 0, 0))  # 練習１：黒い部分を透明にする
-    pg.draw.circle(bd_img, (255, 0, 0), (10, 10), 10)
-    bd_rct = bd_img.get_rect()  # 練習１：SurfaceからRectを抽出する
-    x, y = random.randint(0, WIDTH), random.randint(0, HEIGHT)
-    bd_rct.center = (x, y)  # 練習１：Rectにランダムな座標を設定する
-    vx, vy = +5, +5  # 練習２：爆弾の速度
+    kk_rct.center = 900,400
+    
+    enn = pg.Surface((20, 20))
+    pg.draw.circle(enn, (255, 0, 0), (10, 10), 10)
+    enn.set_colorkey((0, 0, 0))
+    x, y = random.randint(0,1600), random.randint(0,900)
+    vx,vy = +5, +5
+    enn_rct = enn.get_rect()
+    enn_rct.center = x, y
     clock = pg.time.Clock()
     tmr = 0
+    
+    accs = [a for a in range(1, 11)] # 加速度のリスト
+    enn_imgs = [] # 爆弾imgリスト
+    for r in range(1, 11):
+        enn_img = pg.Surface((20*r, 20*r), pg.SRCALPHA)
+        pg.draw.circle(enn_img, (255, 0, 0), (10*r, 10*r), 10*r)
+        enn_imgs.append(enn_img)
+        
+    key_zi = {
+        pg.K_UP: (0, -5),
+        pg.K_DOWN: (0, +5),
+        pg.K_LEFT: (-5, 0),
+        pg.K_RIGHT: (+5, 0),
+        }
+    cos_zi = {
+        (0, 5): (pg.transform.flip(kk_img, True, False), -90),
+        (5, 5): (pg.transform.flip(kk_img, True, False), -45),
+        (5, 0): (pg.transform.flip(kk_img, True, False), 0),
+        (5, -5): (pg.transform.flip(kk_img, True, False), 45),
+        (0, -5): (pg.transform.flip(kk_img, True, False), 90),
+        (-5, 5): (kk_img, 45),
+        (-5, -5): (kk_img, -45),
+        (-5, 0): (kk_img, 0)
+    }
+    
     while True:
         for event in pg.event.get():
-            if event.type == pg.QUIT: 
+            if event.type == pg.QUIT:
                 return
-            
-        screen.blit(bg_img, [0, 0])
-        """こうかとん"""
-        key_lst = pg.key.get_pressed()
-        sum_mv = [0, 0]
-        for key, mv in delta.items():
-            if key_lst[key]:
-                sum_mv[0] += mv[0]  # 練習３：横方向の合計移動量
-                sum_mv[1] += mv[1]  # 練習３：縦方向の合計移動量
-        kk_rct.move_ip(sum_mv[0], sum_mv[1])  # 練習３：移動させる
-        if check_bound(kk_rct) != (True, True):  # 練習４：はみだし判定
-            kk_rct.move_ip(-sum_mv[0], -sum_mv[1]) 
-        screen.blit(kk_img, kk_rct)  # 練習３：移動後の座標に表示させる
-        """"ばくだん"""
-        bd_rct.move_ip(vx, vy)  # 練習２：爆弾を移動させる
-        yoko, tate = check_bound(bd_rct)
-        if not yoko:  # 練習４：横方向にはみ出たら
-            vx *= -1
-        if not tate:  # 練習４：縦方向にはみ出たら
-            vy *= -1
-        screen.blit(bd_img, bd_rct)  # 練習１：Rectを使って試しにblit
 
+        screen.blit(bg_img, [0, 0])
+        
+        # こうかとんを動かす
+        key_lst = pg.key.get_pressed()
+        total = [0, 0]
+        newkk = kk_img
+        
+        for k, m in key_zi.items():
+            if key_lst[k]:
+                total[0] += m[0]
+                total[1] += m[1]
+        kk_rct.move_ip(total)
+        
+        # こうかとんの向きを変える
+        for kk, mm in cos_zi.items():
+            if total[0] == kk[0] and total[1] == kk[1]:
+                newkk = pg.transform.rotozoom(mm[0], mm[1], 1.0)
+        screen.blit(newkk, [kk_rct.x, kk_rct.y])
+        
+        # こうかとんと爆弾が画面外に出たか判定
+        kk_in = gamengai(kk_rct)
+        if not kk_in[0]:
+            kk_rct.x = max(0, min(kk_rct.x, WIDTH - kk_rct.width))
+        if not kk_in[1]:
+            kk_rct.y = max(0, min(kk_rct.y, HEIGHT - kk_rct.height))
+
+        enn_in = gamengai(enn_rct)
+        if not enn_in[0]:
+            vx = -vx
+        if not enn_in[1]:
+            vy = -vy
+
+
+        # こうかとんと爆弾がぶつかったら終了  
+        if kk_rct.colliderect(enn_rct):
+            return
+        
+        enn_rct.move_ip(avx, avy)
         pg.display.update()
         tmr += 1
         clock.tick(50)
+
+
 if __name__ == "__main__":
     pg.init()
     main()
